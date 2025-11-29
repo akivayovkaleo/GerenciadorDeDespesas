@@ -1,4 +1,4 @@
-# Gerenciador da Mercearia do Pai
+# Gerenciador da Mercearia 
 
 Este é um aplicativo web completo criado para ajudar a gerenciar as finanças de uma mercearia. Ele permite o registro de movimentos diários de caixa para cálculo de médias de faturamento e também possui um gerenciador de despesas e receitas.
 
