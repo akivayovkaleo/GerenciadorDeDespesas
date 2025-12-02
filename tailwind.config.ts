@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'amarelo-queimado': '#f5b50a',
-        'azul-mercearia': '#0a7df5',
+        'blue-navy': '#001f3f',
+        'yellow-burned': '#cc7a00',
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

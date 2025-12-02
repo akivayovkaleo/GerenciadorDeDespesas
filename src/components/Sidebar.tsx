@@ -1,23 +1,38 @@
 import Link from 'next/link';
+import { FiTrendingUp, FiList } from 'react-icons/fi';
 
 const Sidebar = () => {
   return (
-    <aside className="w-64 bg-azul-mercearia text-white p-4 flex flex-col">
-      <h1 className="text-2xl font-bold mb-8 text-amarelo-queimado">Mercearia do Pai</h1>
-      <nav>
-        <ul>
-          <li className="mb-2">
-            <Link href="/" className="block py-2 px-4 rounded-md text-lg font-bold hover:bg-white hover:text-azul-mercearia transition-colors duration-200">
-              Cálculo de Médias
+    <aside className="w-64 bg-blue-900 text-white p-6 flex flex-col h-screen sticky top-0">
+      <h1 className="text-3xl font-bold mb-8 text-yellow-600 border-b-2 border-yellow-600 pb-4">
+        Mercearia
+      </h1>
+      <nav className="flex-grow">
+        <ul className="space-y-2">
+          <li>
+            <Link
+              href="/"
+              className="flex items-center gap-3 py-3 px-4 rounded-lg text-lg font-semibold hover:bg-yellow-600 hover:text-blue-900 transition-all duration-200"
+            >
+              <FiTrendingUp size={20} />
+              Análise de Médias
             </Link>
           </li>
           <li>
-            <Link href="/despesas" className="block py-2 px-4 rounded-md text-lg font-bold hover:bg-white hover:text-azul-mercearia transition-colors duration-200">
-              Gerenciador de Despesas
+            <Link
+              href="/despesas"
+              className="flex items-center gap-3 py-3 px-4 rounded-lg text-lg font-semibold hover:bg-yellow-600 hover:text-blue-900 transition-all duration-200"
+            >
+              <FiList size={20} />
+              Gerenciador
             </Link>
           </li>
         </ul>
       </nav>
+
+      <div className="border-t border-yellow-600 pt-4">
+        <p className="text-xs text-gray-300">v1.0</p>
+      </div>
     </aside>
   );
 };

@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Gerenciador de Mercearia",
-  description: "Um aplicativo para gerenciar as finanças da sua mercearia.",
+  description: "Um aplicativo completo para gerenciar as finanças e despesas da sua mercearia.",
 };
 
 export default function RootLayout({
@@ -16,13 +16,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} flex bg-gray-100`}>
+    <html lang="pt-BR">
+      <body className={`${inter.className} flex bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen`}>
         <Sidebar />
-        <main className="flex-grow">
-          <div className="p-8">{children}</div>
+        <main className="flex-grow overflow-auto">
+          <div className="p-8 max-w-7xl mx-auto">{children}</div>
         </main>
       </body>
     </html>
   );
 }
+
