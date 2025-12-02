@@ -19,13 +19,23 @@ const Sidebar = () => {
             </Link>
           </li>
           <li>
-            <Link
-              href="/despesas"
-              className="flex items-center gap-3 py-3 px-4 rounded-lg text-lg font-semibold hover:bg-yellow-600 hover:text-blue-900 transition-all duration-200"
-            >
-              <FiList size={20} />
-              Gerenciador
-            </Link>
+                <Link
+                  href="/despesas"
+                  className="flex items-center gap-3 py-3 px-4 rounded-lg text-lg font-semibold hover:bg-yellow-600 hover:text-blue-900 transition-all duration-200"
+                >
+                  <FiList size={20} />
+                  Gerenciador
+                </Link>
+
+              </li>
+              <li>
+                <Link
+                  href="/graficos"
+                  className="flex items-center gap-3 py-3 px-4 rounded-lg text-lg font-semibold hover:bg-yellow-600 hover:text-blue-900 transition-all duration-200"
+                >
+                  <FiTrendingUp size={20} />
+                  Gráficos
+                </Link>
           </li>
         </ul>
       </nav>

@@ -6,6 +6,11 @@ export interface Expense {
   amount: number;
   date: Date;
   category: string;
+  type?: 'receita' | 'despesa';
+  // payment plan: if the expense is going to be paid in installments,
+  // these fields are stored for reference (not required)
+  installments?: number;
+  intervalDays?: number; // interval between installments in days
 }
 
 export interface AverageData {
@@ -61,7 +66,7 @@ export function findValidDaysWithMovement(
       }
     }
     
-    // Verifica se houve movimento nesse dia
+    // Verifica se houve movimento nesse dia (qualquer tipo: receita/despesa)
     const hasMovement = expenses.some(exp => {
       const expDate = new Date(exp.date);
       return (

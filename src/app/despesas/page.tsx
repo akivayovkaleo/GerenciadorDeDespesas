@@ -63,34 +63,34 @@ export default function DespesasPage() {
   return (
     <div className="space-y-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-blue-900 mb-2">Gerenciador de Despesas</h1>
-        <p className="text-gray-600">Registre e gerencie todas as despesas da sua mercearia</p>
+        <h1 className="text-4xl font-bold text-blue-900 mb-2">Gerenciador de Movimentos</h1>
+        <p className="text-gray-600">Registre entradas (receitas) e saídas (despesas) da sua mercearia</p>
       </div>
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg shadow-md border-l-4 border-blue-900">
-          <p className="text-gray-600 text-sm font-medium">Total de Despesas</p>
+          <p className="text-gray-600 text-sm font-medium">Total de Receitas</p>
           <p className="text-3xl font-bold text-blue-900 mt-2">
-            R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            R$ {expenses.filter(e => e.type === 'receita').reduce((s, e) => s + e.amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-xs text-gray-500 mt-2">{expenses.length} registros</p>
+          <p className="text-xs text-gray-500 mt-2">{expenses.filter(e => e.type === 'receita').length} registros</p>
         </div>
 
         <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-lg shadow-md border-l-4 border-yellow-600">
-          <p className="text-gray-600 text-sm font-medium">Média por Despesa</p>
+          <p className="text-gray-600 text-sm font-medium">Total de Despesas</p>
           <p className="text-3xl font-bold text-yellow-600 mt-2">
-            R$ {avgAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            R$ {expenses.filter(e => e.type === 'despesa').reduce((s, e) => s + e.amount, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-xs text-gray-500 mt-2">Valor médio</p>
+          <p className="text-xs text-gray-500 mt-2">{expenses.filter(e => e.type === 'despesa').length} registros</p>
         </div>
 
         <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg shadow-md border-l-4 border-green-600">
-          <p className="text-gray-600 text-sm font-medium">Categorias</p>
+          <p className="text-gray-600 text-sm font-medium">Saldo (Receitas - Despesas)</p>
           <p className="text-3xl font-bold text-green-600 mt-2">
-            {new Set(expenses.map(e => e.category)).size}
+            R$ {(expenses.filter(e => e.type === 'receita').reduce((s, e) => s + e.amount, 0) - expenses.filter(e => e.type === 'despesa').reduce((s, e) => s + e.amount, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className="text-xs text-gray-500 mt-2">Tipos diferentes</p>
+          <p className="text-xs text-gray-500 mt-2">{new Set(expenses.map(e => e.category)).size} categorias</p>
         </div>
       </div>
 

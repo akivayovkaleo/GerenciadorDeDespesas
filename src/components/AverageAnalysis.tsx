@@ -9,40 +9,41 @@ interface AverageAnalysisProps {
 }
 
 export default function AverageAnalysis({ expenses }: AverageAnalysisProps) {
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
   const [monthsBack, setMonthsBack] = useState(3);
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
-  // Calcula média diária
+  // Calcula média diária de movimento (apenas receitas/entradas)
   const dailyAverage = useMemo(() => {
-    return calculateDailyAverage(selectedDay, monthsBack, expenses);
+    const receipts = expenses.filter(e => e.type === 'receita');
+    return calculateDailyAverage(selectedDay, monthsBack, receipts);
   }, [selectedDay, monthsBack, expenses]);
 
   // Calcula médias semanais dos últimos 12 meses
   const weeklyAverages = useMemo(() => {
+    const receipts = expenses.filter(e => e.type === 'receita');
     const weeks: Record<string, ReturnType<typeof calculateWeeklyAverage>> = {};
     const currentYear = new Date().getFullYear();
-    
     for (let m = 0; m < 12; m++) {
       const checkDate = new Date(currentYear, today.getMonth() - m, 1);
       const year = checkDate.getFullYear();
-      
+
       for (let d = 1; d <= 31; d++) {
         const testDate = new Date(year, checkDate.getMonth(), d);
         if (testDate.getMonth() !== checkDate.getMonth()) break;
-        
+
         const week = getWeekNumber(testDate);
         const key = `${year}-W${week}`;
-        
+
         if (!weeks[key]) {
-          weeks[key] = calculateWeeklyAverage(week, year, expenses);
+          weeks[key] = calculateWeeklyAverage(week, year, receipts);
         }
       }
     }
-    
+
     return Object.values(weeks)
       .filter(w => w.dataPoints > 0)
       .sort((a, b) => {
@@ -50,25 +51,26 @@ export default function AverageAnalysis({ expenses }: AverageAnalysisProps) {
         return b.week - a.week;
       })
       .slice(0, 12);
-  }, [expenses]);
+  }, [expenses, today]);
 
   // Calcula médias mensais dos últimos 12 meses
   const monthlyAverages = useMemo(() => {
+    const receipts = expenses.filter(e => e.type === 'receita');
     const months = [];
-    
+
     for (let i = 0; i < 12; i++) {
       const checkDate = new Date(today.getFullYear(), today.getMonth() - i);
       const month = checkDate.getMonth() + 1;
       const year = checkDate.getFullYear();
-      const avg = calculateMonthlyAverage(month, year, expenses);
-      
+      const avg = calculateMonthlyAverage(month, year, receipts);
+
       if (avg.dataPoints > 0) {
         months.push(avg);
       }
     }
-    
+
     return months;
-  }, [expenses]);
+  }, [expenses, today]);
 
   const handlePrevDay = () => {
     setSelectedDay(selectedDay === 1 ? 31 : selectedDay - 1);
@@ -99,8 +101,8 @@ export default function AverageAnalysis({ expenses }: AverageAnalysisProps) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6 bg-blue-900 text-white">
-        <h2 className="text-2xl font-bold">Análise de Médias</h2>
-        <p className="text-yellow-300 mt-1">Visualize as médias de despesas</p>
+        <h2 className="text-2xl font-bold">Análise de Movimento</h2>
+        <p className="text-yellow-300 mt-1">Visualize as médias de entrada (movimento) da mercearia</p>
       </div>
 
       <div className="p-6">

@@ -26,7 +26,7 @@ export default function ExpenseList({ expenses, onDeleteExpense }: ExpenseListPr
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6 bg-blue-900 text-white">
-        <h2 className="text-2xl font-bold">Histórico de Despesas</h2>
+        <h2 className="text-2xl font-bold">Histórico de Movimentos</h2>
         <p className="mt-2 text-yellow-300">
           Total: R$ {totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
@@ -39,6 +39,7 @@ export default function ExpenseList({ expenses, onDeleteExpense }: ExpenseListPr
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Data</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Descrição</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Categoria</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tipo</th>
               <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">Valor</th>
               <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Ação</th>
             </tr>
@@ -59,6 +60,14 @@ export default function ExpenseList({ expenses, onDeleteExpense }: ExpenseListPr
                   <span className="px-3 py-1 bg-blue-100 text-blue-900 rounded-full text-xs font-semibold">
                     {expense.category}
                   </span>
+                </td>
+                <td className="px-6 py-4 text-sm font-medium">
+                  <span className={`${expense.type === 'receita' ? 'text-green-700' : 'text-red-700'}`}>
+                    {expense.type === 'receita' ? 'Receita' : 'Despesa'}
+                  </span>
+                  {expense.installments && (
+                    <div className="text-xs text-gray-500">{expense.installments}x • {expense.intervalDays || 30}d</div>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-sm font-semibold text-right text-gray-900">
                   R$ {expense.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
