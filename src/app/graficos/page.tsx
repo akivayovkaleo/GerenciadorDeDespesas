@@ -1,18 +1,8 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+const ChartsClient = lazy(() => import('@/components/ChartsClient'));
 
 type Expense = {
   id: string;
@@ -134,6 +124,30 @@ export default function GraficosPage() {
     URL.revokeObjectURL(url);
   }
 
+  function exportAggregated() {
+    // export aggregated monthly totals to CSV
+    const rows = [['Mês', 'Receitas', 'Despesas', 'Saldo']];
+    months.forEach((m) => {
+      const receitas = byMonth[m].receita;
+      const despesas = byMonth[m].despesa;
+      const saldo = receitas - despesas;
+      rows.push([
+        getMonthLabel(m),
+        receitas.toFixed(2),
+        despesas.toFixed(2),
+        saldo.toFixed(2),
+      ]);
+    });
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `resumo_mensal_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold text-blue-900 mb-4">Gráficos de Movimentos</h2>
@@ -171,14 +185,26 @@ export default function GraficosPage() {
             <input type="date" value={endDate ?? ''} onChange={(e) => setEndDate(e.target.value || null)} className="px-2 py-1 border rounded" />
           </label>
 
-          <div className="ml-auto">
-            <button onClick={exportCsv} className="bg-blue-900 text-white px-3 py-1 rounded hover:opacity-90">Exportar CSV</button>
+          <div className="ml-auto flex gap-2">
+            <button onClick={exportCsv} className="bg-blue-900 text-white px-3 py-1 rounded hover:bg-opacity-90 transition">Detalhado</button>
+            <button onClick={exportAggregated} className="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-opacity-90 transition">Resumo Mensal</button>
           </div>
         </div>
       </div>
 
       <div className="bg-white p-4 rounded shadow" style={{ height: 360 }}>
-        <Bar options={options} data={data} />
+        <Suspense
+          fallback={
+            <div className="h-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded animate-pulse flex flex-col items-center justify-center">
+              <div className="text-center space-y-3">
+                <div className="h-3 w-48 bg-gray-300 rounded mx-auto"></div>
+                <div className="h-3 w-32 bg-gray-300 rounded mx-auto"></div>
+              </div>
+            </div>
+          }
+        >
+          <ChartsClient options={options} data={data} />
+        </Suspense>
       </div>
     </div>
   );
