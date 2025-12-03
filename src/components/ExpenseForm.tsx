@@ -15,6 +15,9 @@ export default function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
   const [type, setType] = useState<'despesa' | 'receita'>('despesa');
   const [installments, setInstallments] = useState(1);
   const [intervalDays, setIntervalDays] = useState(30);
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isParcelado, setIsParcelado] = useState(false);
 
   const categories = ['Geral', 'Alimentos', 'Fornecedor', 'Aluguel', 'Energia', 'Funcionários', 'Outros'];
 
@@ -26,9 +29,8 @@ export default function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
       return;
     }
 
-    // If installments > 1, create multiple scheduled payments spaced by intervalDays
-    const amt = parseFloat(amount);
-    const baseDate = new Date(date);
+    // If installments > 1, create multiple payments spaced by intervalDays
+    const amt = parseFloat(amount || '0');
     const parts = Math.max(1, installments);
 
     // Work in cents to avoid floating point rounding issues
@@ -36,9 +38,18 @@ export default function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
     const baseCents = Math.floor(totalCents / parts);
     const remainder = totalCents - baseCents * parts;
 
+    // Determine start date for payments: use dueDate if scheduled, otherwise the provided date
+    const startForPayments = isScheduled ? dueDate : date;
+    const baseDate = new Date(startForPayments + 'T00:00:00');
+
     for (let i = 0; i < parts; i++) {
-      const expDate = new Date(baseDate);
-      expDate.setDate(baseDate.getDate() + i * intervalDays);
+      const expDateObj = new Date(baseDate);
+      expDateObj.setDate(baseDate.getDate() + i * intervalDays);
+
+      const year = expDateObj.getFullYear();
+      const month = String(expDateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(expDateObj.getDate()).padStart(2, '0');
+      const expDateStr = `${year}-${month}-${day}`; // store as YYYY-MM-DD to avoid timezone issues
 
       // add remainder to the last installment so the sum matches original amount
       const cents = baseCents + (i === parts - 1 ? remainder : 0);
@@ -47,11 +58,14 @@ export default function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
       onAddExpense({
         description,
         amount: parseFloat(partAmount.toFixed(2)),
-        date: expDate,
+        // record date remains the entered date; dueDate is the payment date
+        date: date,
         category,
         type,
         installments: parts > 1 ? parts : undefined,
         intervalDays: parts > 1 ? intervalDays : undefined,
+        paid: isScheduled ? false : true,
+        dueDate: expDateStr,
       });
     }
 
@@ -138,32 +152,57 @@ export default function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Parcelas</label>
-          <input
-            type="number"
-            min={1}
-            value={installments}
-            onChange={(e) => setInstallments(Math.max(1, Number(e.target.value) || 1))}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-          />
+        <div className="flex items-center gap-3">
+          <input id="pending" type="checkbox" checked={isScheduled} onChange={(e) => setIsScheduled(e.target.checked)} />
+          <label htmlFor="pending" className="text-sm text-gray-700">A pagar (pendente)</label>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Intervalo entre parcelas (dias)</label>
-          <input
-            type="number"
-            min={1}
-            value={intervalDays}
-            onChange={(e) => setIntervalDays(Math.max(1, Number(e.target.value) || 30))}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-          />
+        <div className="flex items-center gap-3">
+          <input id="parcelado" type="checkbox" checked={isParcelado} onChange={(e) => setIsParcelado(e.target.checked)} />
+          <label htmlFor="parcelado" className="text-sm text-gray-700">Parcelado</label>
         </div>
 
         <div className="flex items-end">
-          <p className="text-sm text-gray-500">Se quiser criar um pagamento único, deixe Parcelas = 1</p>
+          <p className="text-sm text-gray-500">Marque se for pendente ou parcelado</p>
         </div>
       </div>
+
+      {isScheduled && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Data de Vencimento</label>
+          <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-lg" />
+        </div>
+      )}
+
+      {isParcelado && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Parcelas</label>
+            <input
+              type="number"
+              min={1}
+              value={installments}
+              onChange={(e) => setInstallments(Math.max(1, Number(e.target.value) || 1))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Intervalo entre parcelas (dias)</label>
+            <input
+              type="number"
+              min={1}
+              value={intervalDays}
+              onChange={(e) => setIntervalDays(Math.max(1, Number(e.target.value) || 30))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            />
+          </div>
+
+          <div className="flex items-end">
+            <p className="text-sm text-gray-500">Defina parcelas e intervalo</p>
+          </div>
+        </div>
+      )}
 
       <button
         type="submit"

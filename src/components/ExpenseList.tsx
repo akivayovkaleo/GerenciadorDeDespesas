@@ -6,9 +6,10 @@ import { FiTrash2 } from 'react-icons/fi';
 interface ExpenseListProps {
   expenses: Expense[];
   onDeleteExpense: (id: string) => void;
+  onTogglePaid?: (id: string) => void;
 }
 
-export default function ExpenseList({ expenses, onDeleteExpense }: ExpenseListProps) {
+export default function ExpenseList({ expenses, onDeleteExpense, onTogglePaid }: ExpenseListProps) {
   const sortedExpenses = [...expenses].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
@@ -53,7 +54,7 @@ export default function ExpenseList({ expenses, onDeleteExpense }: ExpenseListPr
                 } hover:bg-yellow-50 transition`}
               >
                 <td className="px-6 py-4 text-sm text-gray-900">
-                  {new Date(expense.date).toLocaleDateString('pt-BR')}
+                  {formatISOToBR(expense.date)}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">{expense.description}</td>
                 <td className="px-6 py-4 text-sm">
@@ -69,10 +70,26 @@ export default function ExpenseList({ expenses, onDeleteExpense }: ExpenseListPr
                     <div className="text-xs text-gray-500">{expense.installments}x • {expense.intervalDays || 30}d</div>
                   )}
                 </td>
+                <td className="px-6 py-4 text-sm">
+                  {expense.dueDate ? <div>Venc.: {formatISOToBR(expense.dueDate)}</div> : <div>-</div>}
+                  <div className="text-xs mt-1">
+                    {expense.paid ? <span className="text-green-700">Pago</span> : <span className="text-red-600">Pendente</span>}
+                  </div>
+                </td>
                 <td className="px-6 py-4 text-sm font-semibold text-right text-gray-900">
                   R$ {expense.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
-                <td className="px-6 py-4 text-center">
+                <td className="px-6 py-4 text-center flex items-center justify-center gap-3">
+                  {onTogglePaid && (
+                    <button
+                      onClick={() => onTogglePaid(expense.id)}
+                      className={`px-2 py-1 rounded text-sm ${expense.paid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}
+                      title={expense.paid ? 'Marcar como pendente' : 'Marcar como pago'}
+                    >
+                      {expense.paid ? 'Pago' : 'Pagar'}
+                    </button>
+                  )}
+
                   <button
                     onClick={() => onDeleteExpense(expense.id)}
                     className="text-red-600 hover:text-red-800 transition"
@@ -88,4 +105,18 @@ export default function ExpenseList({ expenses, onDeleteExpense }: ExpenseListPr
       </div>
     </div>
   );
+}
+
+function formatISOToBR(dateStr?: string) {
+  if (!dateStr) return '-';
+  // expect YYYY-MM-DD
+  const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    return `${m[3]}/${m[2]}/${m[1]}`;
+  }
+  try {
+    return new Date(dateStr).toLocaleDateString('pt-BR');
+  } catch {
+    return dateStr;
+  }
 }

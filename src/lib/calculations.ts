@@ -4,7 +4,12 @@ export interface Expense {
   id: string;
   description: string;
   amount: number;
-  date: Date;
+  // store dates as ISO strings (YYYY-MM-DD) to avoid timezone shifts in UI
+  date: string;
+  // optional due date for pending payments (ISO string)
+  dueDate?: string;
+  // whether the expense is already paid
+  paid?: boolean;
   category: string;
   type?: 'receita' | 'despesa';
   // payment plan: if the expense is going to be paid in installments,

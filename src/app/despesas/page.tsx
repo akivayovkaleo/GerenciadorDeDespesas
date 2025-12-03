@@ -14,10 +14,8 @@ export default function DespesasPage() {
     try {
       const saved = localStorage.getItem('expenses');
       if (saved) {
-        const parsed = JSON.parse(saved).map((exp: any) => ({
-          ...exp,
-          date: new Date(exp.date),
-        }));
+        // keep date and dueDate as ISO strings to avoid timezone shifts
+        const parsed = JSON.parse(saved) as Expense[];
         setExpenses(parsed);
       }
     } catch (error) {
@@ -44,6 +42,10 @@ export default function DespesasPage() {
 
   const handleDeleteExpense = (id: string) => {
     setExpenses(expenses.filter(exp => exp.id !== id));
+  };
+
+  const handleTogglePaid = (id: string) => {
+    setExpenses(expenses.map(exp => (exp.id === id ? { ...exp, paid: !exp.paid } : exp)));
   };
 
   const totalAmount = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -98,7 +100,7 @@ export default function DespesasPage() {
       <ExpenseForm onAddExpense={handleAddExpense} />
 
       {/* Lista de Despesas */}
-      <ExpenseList expenses={expenses} onDeleteExpense={handleDeleteExpense} />
+      <ExpenseList expenses={expenses} onDeleteExpense={handleDeleteExpense} onTogglePaid={handleTogglePaid} />
     </div>
   );
 }
