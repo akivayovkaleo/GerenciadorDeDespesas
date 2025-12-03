@@ -13,10 +13,8 @@ export default function HomePage() {
     try {
       const saved = localStorage.getItem('expenses');
       if (saved) {
-        const parsed = JSON.parse(saved).map((exp: any) => ({
-          ...exp,
-          date: new Date(exp.date),
-        }));
+        // keep dates as ISO strings to avoid timezone shifts
+        const parsed = JSON.parse(saved) as Expense[];
         setExpenses(parsed);
       }
     } catch (error) {

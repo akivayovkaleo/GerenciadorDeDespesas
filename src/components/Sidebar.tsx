@@ -21,11 +21,11 @@ const Sidebar = () => {
 
           <li>
             <Link
-              href="/receitas"
+              href="/"
               className="flex items-center gap-3 py-3 px-4 rounded-lg text-lg font-semibold hover:bg-yellow-600 hover:text-blue-900 transition-all duration-200"
             >
               <FiTrendingUp size={20} />
-              Receitas
+              Análise de Médias
             </Link>
           </li>
 

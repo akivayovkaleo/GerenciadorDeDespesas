@@ -54,9 +54,14 @@ export default function DespesasPendentesPage() {
       const d = parseISO(e.dueDate);
       return isWithinInterval(d, { start, end }) && (categoryFilter === 'all' || e.category === categoryFilter) && e.description.toLowerCase().includes(searchText.toLowerCase());
     });
-  }, [pending, period, selectedDate]);
+  }, [pending, period, selectedDate, categoryFilter, searchText]);
 
   const total = useMemo(() => filtered.reduce((s, x) => s + x.amount, 0), [filtered]);
+
+  const today = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, []);
 
   const chartData = useMemo(() => {
     if (period === 'day') {
@@ -74,20 +79,37 @@ export default function DespesasPendentesPage() {
       });
       const labels = Object.keys(groups).sort((a, b) => Number(a) - Number(b));
       const data = labels.map(l => groups[l]);
-      return { labels, datasets: [{ label: 'A pagar (R$)', data, backgroundColor: '#f59e0b' }] };
+      const todayDay = String(today.slice(8, 10));
+      const backgroundColor = labels.map(l => (l === todayDay ? '#ef4444' : '#f59e0b'));
+      return { labels, datasets: [{ label: 'A pagar (R$)', data, backgroundColor }] };
     }
 
     // week: group by weekday name
     const names = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
     const groups: number[] = Array(7).fill(0);
+    const ref = parseISO(selectedDate);
+    const start = startOfWeek(ref, { weekStartsOn: 1 });
     filtered.forEach(f => {
       if (!f.dueDate) return;
       const d = parseISO(f.dueDate);
       const idx = (d.getDay() + 6) % 7; // make Monday=0
       groups[idx] += f.amount;
     });
-    return { labels: names, datasets: [{ label: 'A pagar (R$)', data: groups, backgroundColor: '#f59e0b' }] };
-  }, [filtered, period]);
+
+    // Highlight today's day in the week
+    const todayDayOfWeek = (new Date().getDay() + 6) % 7;
+    const backgroundColor = groups.map((_, idx) => {
+      // Check if this is the current week and same day
+      const weekStart = startOfWeek(parseISO(today), { weekStartsOn: 1 });
+      const selectedWeekStart = start;
+      if (weekStart.toISOString().slice(0, 10) === selectedWeekStart.toISOString().slice(0, 10) && idx === todayDayOfWeek) {
+        return '#ef4444';
+      }
+      return '#f59e0b';
+    });
+
+    return { labels: names, datasets: [{ label: 'A pagar (R$)', data: groups, backgroundColor }] };
+  }, [filtered, period, selectedDate, today]);
 
   function exportCsv() {
     const rows = [

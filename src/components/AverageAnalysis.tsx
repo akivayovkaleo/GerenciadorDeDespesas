@@ -9,7 +9,12 @@ interface AverageAnalysisProps {
 }
 
 export default function AverageAnalysis({ expenses }: AverageAnalysisProps) {
-  const today = useMemo(() => new Date(), []);
+  // Get today's date as ISO string to avoid timezone issues
+  const today = useMemo(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }, []);
+
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());

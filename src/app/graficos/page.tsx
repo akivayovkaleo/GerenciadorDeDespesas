@@ -110,6 +110,56 @@ export default function GraficosPage() {
     },
   };
 
+  // Pie chart: Receitas vs Despesas (totals)
+  const totalReceita = filtered.filter(e => e.type === 'receita').reduce((s, e) => s + e.amount, 0);
+  const totalDespesa = filtered.filter(e => e.type === 'despesa').reduce((s, e) => s + e.amount, 0);
+
+  const pieDataReceiptVsExpense = {
+    labels: ['Receitas', 'Despesas'],
+    datasets: [{
+      data: [totalReceita, totalDespesa],
+      backgroundColor: ['#0f172a', '#b7791f'],
+    }],
+  };
+
+  const pieOptionsBasic: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' } },
+  };
+
+  // Pie chart: only Despesas by category
+  const despesasByCategory: Record<string, number> = {};
+  filtered.filter(e => e.type === 'despesa').forEach(e => {
+    const cat = e.category || 'Sem categoria';
+    despesasByCategory[cat] = (despesasByCategory[cat] || 0) + e.amount;
+  });
+
+  const pieLabelsDespesa = Object.keys(despesasByCategory);
+  const pieDataDespesa = {
+    labels: pieLabelsDespesa,
+    datasets: [{
+      data: pieLabelsDespesa.map(l => despesasByCategory[l]),
+      backgroundColor: ['#b7791f', '#d97706', '#f59e0b', '#fbbf24', '#fcd34d', '#fef3c7'],
+    }],
+  };
+
+  // Pie chart: only Receitas by category
+  const receitasByCategory: Record<string, number> = {};
+  filtered.filter(e => e.type === 'receita').forEach(e => {
+    const cat = e.category || 'Sem categoria';
+    receitasByCategory[cat] = (receitasByCategory[cat] || 0) + e.amount;
+  });
+
+  const pieLabelsReceita = Object.keys(receitasByCategory);
+  const pieDataReceita = {
+    labels: pieLabelsReceita,
+    datasets: [{
+      data: pieLabelsReceita.map(l => receitasByCategory[l]),
+      backgroundColor: ['#0f172a', '#1e293b', '#334155', '#475569', '#64748b', '#78716c'],
+    }],
+  };
+
   function exportCsv() {
     // export filtered items (not aggregated) to CSV
     const rows = [['id', 'description', 'amount', 'date', 'category', 'type']];
@@ -203,8 +253,31 @@ export default function GraficosPage() {
             </div>
           }
         >
-          <ChartsClient options={options} data={data} />
+          <ChartsClient options={options} data={data} type="bar" />
         </Suspense>
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded shadow" style={{ height: 300 }}>
+          <h3 className="font-semibold text-blue-900 mb-2">Receitas vs Despesas</h3>
+          <Suspense fallback={<div>Carregando...</div>}>
+            <ChartsClient options={pieOptionsBasic} data={pieDataReceiptVsExpense} type="pie" />
+          </Suspense>
+        </div>
+
+        <div className="bg-white p-4 rounded shadow" style={{ height: 300 }}>
+          <h3 className="font-semibold text-blue-900 mb-2">Despesas por Categoria</h3>
+          <Suspense fallback={<div>Carregando...</div>}>
+            <ChartsClient options={pieOptionsBasic} data={pieDataDespesa} type="pie" />
+          </Suspense>
+        </div>
+
+        <div className="bg-white p-4 rounded shadow" style={{ height: 300 }}>
+          <h3 className="font-semibold text-blue-900 mb-2">Receitas por Categoria</h3>
+          <Suspense fallback={<div>Carregando...</div>}>
+            <ChartsClient options={pieOptionsBasic} data={pieDataReceita} type="pie" />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

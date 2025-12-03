@@ -7,9 +7,10 @@ interface ExpenseListProps {
   expenses: Expense[];
   onDeleteExpense: (id: string) => void;
   onTogglePaid?: (id: string) => void;
+  hidePaymentStatus?: boolean;
 }
 
-export default function ExpenseList({ expenses, onDeleteExpense, onTogglePaid }: ExpenseListProps) {
+export default function ExpenseList({ expenses, onDeleteExpense, onTogglePaid, hidePaymentStatus }: ExpenseListProps) {
   const sortedExpenses = [...expenses].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
@@ -72,9 +73,11 @@ export default function ExpenseList({ expenses, onDeleteExpense, onTogglePaid }:
                 </td>
                 <td className="px-6 py-4 text-sm">
                   {expense.dueDate ? <div>Venc.: {formatISOToBR(expense.dueDate)}</div> : <div>-</div>}
-                  <div className="text-xs mt-1">
-                    {expense.paid ? <span className="text-green-700">Pago</span> : <span className="text-red-600">Pendente</span>}
-                  </div>
+                  {!hidePaymentStatus && (
+                    <div className="text-xs mt-1">
+                      {expense.paid ? <span className="text-green-700">Pago</span> : <span className="text-red-600">Pendente</span>}
+                    </div>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-sm font-semibold text-right text-gray-900">
                   R$ {expense.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

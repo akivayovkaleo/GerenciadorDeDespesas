@@ -6,14 +6,18 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Pie } from 'react-chartjs-2';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
-export default function ChartsClient({ data, options }: { data: any; options: any }) {
+export default function ChartsClient({ data, options, type = 'bar' }: { data: any; options: any; type?: 'bar' | 'pie' }) {
+  if (type === 'pie') {
+    return <Pie options={options} data={data} />;
+  }
   return <Bar options={options} data={data} />;
 }
