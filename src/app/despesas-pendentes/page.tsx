@@ -13,6 +13,9 @@ export default function DespesasPendentesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [period, setPeriod] = useState<'day' | 'week' | 'month'>('month');
   const [selectedDate, setSelectedDate] = useState<string>(() => toISO(new Date()));
+  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [searchText, setSearchText] = useState<string>('');
 
   useEffect(() => {
     try {
@@ -25,15 +28,21 @@ export default function DespesasPendentesPage() {
 
   const pending = useMemo(() => expenses.filter(e => !e.paid && e.dueDate), [expenses]);
 
+  const categories = useMemo(() => {
+    const s = new Set<string>();
+    expenses.forEach(e => { if (e.category) s.add(e.category); });
+    return Array.from(s).sort();
+  }, [expenses]);
+
   const filtered = useMemo(() => {
     if (!selectedDate) return [] as Expense[];
     if (period === 'day') {
-      return pending.filter(e => e.dueDate === selectedDate);
+      return pending.filter(e => e.dueDate === selectedDate && (categoryFilter === 'all' || e.category === categoryFilter) && e.description.toLowerCase().includes(searchText.toLowerCase()));
     }
 
     if (period === 'month') {
       const prefix = selectedDate.slice(0, 7); // YYYY-MM
-      return pending.filter(e => e.dueDate && e.dueDate.startsWith(prefix));
+      return pending.filter(e => e.dueDate && e.dueDate.startsWith(prefix) && (categoryFilter === 'all' || e.category === categoryFilter) && e.description.toLowerCase().includes(searchText.toLowerCase()));
     }
 
     // week
@@ -43,7 +52,7 @@ export default function DespesasPendentesPage() {
     return pending.filter(e => {
       if (!e.dueDate) return false;
       const d = parseISO(e.dueDate);
-      return isWithinInterval(d, { start, end });
+      return isWithinInterval(d, { start, end }) && (categoryFilter === 'all' || e.category === categoryFilter) && e.description.toLowerCase().includes(searchText.toLowerCase());
     });
   }, [pending, period, selectedDate]);
 
@@ -95,6 +104,50 @@ export default function DespesasPendentesPage() {
     URL.revokeObjectURL(url);
   }
 
+  function exportAggregatedByMonth() {
+    const groups: Record<string, number> = {};
+    filtered.forEach(f => {
+      const key = f.dueDate ? f.dueDate.slice(0, 7) : 'unknown';
+      groups[key] = (groups[key] || 0) + f.amount;
+    });
+    const rows = [['month', 'total']].concat(Object.keys(groups).sort().map(k => [k, groups[k].toFixed(2)]));
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `despesas_pendentes_aggregated_${period}_${selectedDate}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function selectAllVisible(checked: boolean) {
+    const map: Record<string, boolean> = { ...selectedIds };
+    filtered.forEach(f => { map[f.id] = checked; });
+    setSelectedIds(map);
+  }
+
+  function markSelectedAsPaid() {
+    const ids = Object.keys(selectedIds).filter(k => selectedIds[k]);
+    if (ids.length === 0) return;
+    const updated = expenses.map(e => ids.includes(e.id) ? { ...e, paid: true } : e);
+    setExpenses(updated);
+    localStorage.setItem('expenses', JSON.stringify(updated));
+    setSelectedIds({});
+  }
+
+  function markAllVisibleAsPaid() {
+    const ids = filtered.map(f => f.id);
+    const updated = expenses.map(e => ids.includes(e.id) ? { ...e, paid: true } : e);
+    setExpenses(updated);
+    localStorage.setItem('expenses', JSON.stringify(updated));
+    setSelectedIds({});
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -116,8 +169,21 @@ export default function DespesasPendentesPage() {
           <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="px-3 py-1 border rounded" />
         </div>
 
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-700">Categoria:</label>
+          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="px-3 py-1 border rounded">
+            <option value="all">Todas</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input placeholder="Buscar descrição" value={searchText} onChange={(e) => setSearchText(e.target.value)} className="px-3 py-1 border rounded" />
+        </div>
+
         <div className="ml-auto flex items-center gap-2">
           <button onClick={exportCsv} className="px-3 py-1 bg-yellow-600 text-white rounded">Exportar CSV</button>
+          <button onClick={exportAggregatedByMonth} className="px-3 py-1 bg-yellow-500 text-white rounded">Exportar Agregado</button>
         </div>
       </div>
 
@@ -136,6 +202,13 @@ export default function DespesasPendentesPage() {
 
       <div className="bg-white rounded shadow p-4">
         <h2 className="text-lg font-semibold mb-3">Itens pendentes</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <label className="text-sm">Seleção:</label>
+          <button onClick={() => selectAllVisible(true)} className="px-2 py-1 bg-blue-50 rounded border">Selecionar todos visíveis</button>
+          <button onClick={() => selectAllVisible(false)} className="px-2 py-1 bg-blue-50 rounded border">Limpar seleção</button>
+          <button onClick={markSelectedAsPaid} className="px-2 py-1 bg-green-600 text-white rounded">Marcar selecionados como pagos</button>
+          <button onClick={markAllVisibleAsPaid} className="px-2 py-1 bg-green-500 text-white rounded">Marcar todos visíveis como pagos</button>
+        </div>
         {filtered.length === 0 ? (
           <p className="text-gray-500">Nenhum item pendente neste período.</p>
         ) : (
@@ -143,6 +216,7 @@ export default function DespesasPendentesPage() {
             <table className="w-full">
               <thead className="text-left text-xs text-gray-600 border-b">
                 <tr>
+                  <th className="py-2"><input type="checkbox" onChange={(e) => selectAllVisible(e.target.checked)} /></th>
                   <th className="py-2">Vencimento</th>
                   <th className="py-2">Descrição</th>
                   <th className="py-2">Categoria</th>
@@ -152,6 +226,7 @@ export default function DespesasPendentesPage() {
               <tbody>
                 {filtered.map((f) => (
                   <tr key={f.id} className="border-b">
+                    <td className="py-2"><input type="checkbox" checked={!!selectedIds[f.id]} onChange={() => toggleSelect(f.id)} /></td>
                     <td className="py-2">{formatISOToBR(f.dueDate)}</td>
                     <td className="py-2">{f.description}</td>
                     <td className="py-2">{f.category}</td>
