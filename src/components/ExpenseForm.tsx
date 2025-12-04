@@ -151,57 +151,77 @@ export default function ExpenseForm({ onAddExpense }: ExpenseFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div className="flex items-center gap-3">
-          <input id="pending" type="checkbox" checked={isScheduled} onChange={(e) => setIsScheduled(e.target.checked)} />
-          <label htmlFor="pending" className="text-sm text-gray-700">A pagar (pendente)</label>
-        </div>
+      {/* Campos condicionais para Despesas */}
+      {type === 'despesa' && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <input
+                id="pending"
+                type="checkbox"
+                checked={isScheduled}
+                onChange={(e) => setIsScheduled(e.target.checked)}
+              />
+              <label htmlFor="pending" className="text-sm text-gray-700">A pagar (pendente)</label>
+            </div>
 
-        <div className="flex items-center gap-3">
-          <input id="parcelado" type="checkbox" checked={isParcelado} onChange={(e) => setIsParcelado(e.target.checked)} />
-          <label htmlFor="parcelado" className="text-sm text-gray-700">Parcelado</label>
-        </div>
+            <div className="flex items-center gap-3">
+              <input
+                id="parcelado"
+                type="checkbox"
+                checked={isParcelado}
+                onChange={(e) => setIsParcelado(e.target.checked)}
+              />
+              <label htmlFor="parcelado" className="text-sm text-gray-700">Parcelado</label>
+            </div>
 
-        <div className="flex items-end">
-          <p className="text-sm text-gray-500">Marque se for pendente ou parcelado</p>
-        </div>
-      </div>
-
-      {isScheduled && (
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Data de Vencimento</label>
-          <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-lg" />
-        </div>
-      )}
-
-      {isParcelado && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Parcelas</label>
-            <input
-              type="number"
-              min={1}
-              value={installments}
-              onChange={(e) => setInstallments(Math.max(1, Number(e.target.value) || 1))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            />
+            <div className="flex items-end">
+              <p className="text-sm text-gray-500">Marque se for pendente ou parcelado</p>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Intervalo entre parcelas (dias)</label>
-            <input
-              type="number"
-              min={1}
-              value={intervalDays}
-              onChange={(e) => setIntervalDays(Math.max(1, Number(e.target.value) || 30))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            />
-          </div>
+          {isScheduled && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Data de Vencimento</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+          )}
 
-          <div className="flex items-end">
-            <p className="text-sm text-gray-500">Defina parcelas e intervalo</p>
-          </div>
-        </div>
+          {isParcelado && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Parcelas</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={installments}
+                  onChange={(e) => setInstallments(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Intervalo entre parcelas (dias)</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={intervalDays}
+                  onChange={(e) => setIntervalDays(Math.max(1, Number(e.target.value) || 30))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="flex items-end">
+                <p className="text-sm text-gray-500">Defina parcelas e intervalo</p>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <button

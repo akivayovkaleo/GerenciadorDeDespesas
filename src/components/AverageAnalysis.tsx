@@ -187,24 +187,34 @@ export default function AverageAnalysis({ expenses }: AverageAnalysisProps) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border-l-4 border-yellow-600">
-                <p className="text-gray-600 text-sm">Média do Dia {selectedDay}</p>
-                <p className="text-4xl font-bold text-blue-900 mt-2">
-                  R$ {dailyAverage.average.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-                <p className="text-sm text-gray-600 mt-2">
-                  {dailyAverage.dataPoints} ponto{dailyAverage.dataPoints !== 1 ? 's' : ''} de dados (últimos {monthsBack} mês{monthsBack > 1 ? 'es' : ''})
-                </p>
-              </div>
-
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-lg border-l-4 border-blue-900">
-                <p className="text-gray-600 text-sm">Detalhes</p>
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm"><strong>Pontos de dados:</strong> {dailyAverage.dataPoints}</p>
-                  <p className="text-sm"><strong>Período:</strong> Últimos {monthsBack} mês{monthsBack > 1 ? 'es' : ''}</p>
-                  <p className="text-sm"><strong>Nota:</strong> Feriados e finais de semana são excluídos</p>
+              {dailyAverage.average === null ? (
+                <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg border-l-4 border-red-600 col-span-2">
+                  <p className="text-gray-600 text-center text-sm">
+                    Nenhum dado encontrado para o dia {selectedDay} nos últimos {monthsBack} mês{monthsBack > 1 ? 'es' : ''}.
+                  </p>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border-l-4 border-yellow-600">
+                    <p className="text-gray-600 text-sm">Média do Dia {selectedDay}</p>
+                    <p className="text-4xl font-bold text-blue-900 mt-2">
+                      R$ {dailyAverage.average.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-2">
+                      {dailyAverage.dataPoints} ponto{dailyAverage.dataPoints !== 1 ? 's' : ''} de dados (últimos {monthsBack} mês{monthsBack > 1 ? 'es' : ''})
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-lg border-l-4 border-blue-900">
+                    <p className="text-gray-600 text-sm">Detalhes</p>
+                    <div className="mt-4 space-y-2">
+                      <p className="text-sm"><strong>Pontos de dados:</strong> {dailyAverage.dataPoints}</p>
+                      <p className="text-sm"><strong>Período:</strong> Últimos {monthsBack} mês{monthsBack > 1 ? 'es' : ''}</p>
+                      <p className="text-sm"><strong>Nota:</strong> Feriados e finais de semana são excluídos</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

@@ -1,4 +1,4 @@
-import { isClosedDay } from './holidays';
+import { isClosedDay } from './holidays'; // Mantém a importação, mesmo que não seja usada agora
 
 export interface Expense {
   id: string;
@@ -20,7 +20,7 @@ export interface Expense {
 
 export interface AverageData {
   date: Date;
-  average: number;
+  average: number | null; // Permitir null para quando não há dados
   dataPoints: number;
 }
 
@@ -40,8 +40,8 @@ export interface MonthlyAverage {
 }
 
 /**
- * Encontra os últimos N dias do mês especificado que NÃO foram feriados/domingos
- * e que tiveram movimento (despesas registradas)
+ * Encontra os últimos N dias do mês especificado que tiveram movimento (despesas registradas)
+ * Procura o dia X no mês Y. Se não houver movimento, procura no mês anterior.
  */
 export function findValidDaysWithMovement(
   targetDay: number,
@@ -50,47 +50,70 @@ export function findValidDaysWithMovement(
 ): Date[] {
   const validDays: Date[] = [];
   const today = new Date();
-  
+
   for (let i = 0; i < monthsBack; i++) {
-    const checkDate = new Date(today.getFullYear(), today.getMonth() - i, targetDay);
-    
-    // Se o dia é feriado ou fim de semana, tenta dias anteriores do mesmo mês
-    let searchDate = new Date(checkDate);
+    // Começa procurando no mês atual (ou retroativo) no dia especificado
+    let year = today.getFullYear();
+    let month = today.getMonth() - i;
+    let day = targetDay;
+
+    // Ajuste para meses/anos negativos (ex: janeiro - 1 = dezembro do ano anterior)
+    while (month < 0) {
+      month += 12;
+      year -= 1;
+    }
+
+    let found = false;
     let attempts = 0;
-    const maxAttempts = 31;
-    
-    while (isClosedDay(searchDate) && attempts < maxAttempts) {
-      searchDate.setDate(searchDate.getDate() - 1);
-      attempts++;
-      
-      // Se cruzou para o mês anterior, tenta no mês anterior
-      if (searchDate.getMonth() !== checkDate.getMonth()) {
-        const lastDayPrevMonth = new Date(checkDate.getFullYear(), checkDate.getMonth(), 0);
-        searchDate = new Date(lastDayPrevMonth);
-        break;
+    const maxAttempts = 12; // Limite de meses para tentar (1 ano)
+
+    // Loop para tentar encontrar o dia com movimento, retrocedendo meses se necessário
+    while (!found && attempts < maxAttempts) {
+      const checkDate = new Date(year, month, day);
+
+      // Verifica se o dia existe no mês (evita problemas com meses com menos dias)
+      if (checkDate.getMonth() !== month) {
+        // O dia especificado não existe (ex: 31 de abril), pula para o mês anterior
+        month--;
+        if (month < 0) {
+          month = 11;
+          year--;
+        }
+        attempts++;
+        continue;
+      }
+
+      // Verifica se há movimento nesse dia específico
+      const hasMovement = expenses.some(exp => {
+        const expDate = new Date(exp.date);
+        return (
+          expDate.getFullYear() === checkDate.getFullYear() &&
+          expDate.getMonth() === checkDate.getMonth() &&
+          expDate.getDate() === checkDate.getDate()
+        );
+      });
+
+      if (hasMovement) {
+        validDays.push(new Date(checkDate)); // Adiciona o dia encontrado
+        found = true;
+      } else {
+        // Não encontrou movimento, tenta no mês anterior
+        month--;
+        if (month < 0) {
+          month = 11;
+          year--;
+        }
+        attempts++;
       }
     }
-    
-    // Verifica se houve movimento nesse dia (qualquer tipo: receita/despesa)
-    const hasMovement = expenses.some(exp => {
-      const expDate = new Date(exp.date);
-      return (
-        expDate.getFullYear() === searchDate.getFullYear() &&
-        expDate.getMonth() === searchDate.getMonth() &&
-        expDate.getDate() === searchDate.getDate()
-      );
-    });
-    
-    if (hasMovement) {
-      validDays.push(new Date(searchDate));
-    }
   }
-  
+
   return validDays;
 }
 
 /**
  * Calcula a média de despesas para um dia específico considerando os últimos N meses
+ * Retorna null para a média se não houver dados suficientes.
  */
 export function calculateDailyAverage(
   targetDay: number,
@@ -99,6 +122,14 @@ export function calculateDailyAverage(
 ): AverageData {
   const validDays = findValidDaysWithMovement(targetDay, monthsBack, expenses);
   
+  if (validDays.length === 0) {
+    return {
+      date: new Date(new Date().getFullYear(), new Date().getMonth(), targetDay),
+      average: null, // Indica que não há dados
+      dataPoints: 0,
+    };
+  }
+
   let totalAmount = 0;
   validDays.forEach(day => {
     const dayExpenses = expenses.filter(exp => {
@@ -112,11 +143,11 @@ export function calculateDailyAverage(
     totalAmount += dayExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   });
   
-  const average = validDays.length > 0 ? totalAmount / validDays.length : 0;
+  const average = totalAmount / validDays.length;
   
   return {
     date: new Date(new Date().getFullYear(), new Date().getMonth(), targetDay),
-    average,
+    average: parseFloat(average.toFixed(2)), // Arredonda para 2 casas decimais
     dataPoints: validDays.length,
   };
 }
