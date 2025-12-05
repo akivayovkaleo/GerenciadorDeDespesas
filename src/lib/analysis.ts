@@ -7,15 +7,14 @@ import { startOfMonth, getDay, getWeek, subMonths, getMonth } from 'date-fns';
  * @param monthsBack - The number of previous months to include in the calculation.
  * @returns The calculated daily target.
  */
-export function calculateDailyTarget(expenses: Expense[], monthsBack: number = 3): number {
-  const today = new Date();
-  const currentDayOfWeek = getDay(today);
+export function calculateDailyTarget(expenses: Expense[], monthsBack: number = 3, targetDate: Date = new Date()): number {
+  const currentDayOfWeek = getDay(targetDate);
   const revenues = expenses.filter(e => e.type === 'receita');
 
   const relevantRevenues = revenues.filter(revenue => {
     const revenueDate = new Date(revenue.date);
     const isSameDayOfWeek = getDay(revenueDate) === currentDayOfWeek;
-    const isWithinMonthsBack = revenueDate >= subMonths(startOfMonth(today), monthsBack) && revenueDate < startOfMonth(today);
+    const isWithinMonthsBack = revenueDate >= subMonths(startOfMonth(targetDate), monthsBack) && revenueDate < startOfMonth(targetDate);
     return isSameDayOfWeek && isWithinMonthsBack;
   });
 
